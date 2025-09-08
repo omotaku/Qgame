@@ -28,10 +28,10 @@ body {
 h1, h2, h3, h4 { text-align: center; }
 h1 { font-size: 2.5em; color: #1e88e5; }
 h2 { font-size: 2em; color: #333; }
-h3 { font-size: 1.5em; border-bottom: 2px solid #1e88e5; padding-bottom: 10px; }
+h3 { font-size: 1.5em; border-bottom: 2px solid #1e88e5; padding-bottom: 10px; margin-bottom: 25px; }
 h4 { color: #555; text-align: left; margin-top: 25px; border-left: 5px solid #1e88e5; padding-left: 10px;}
 
-hr { display: none; /* hrタグは使わず、余白で区切る */ }
+hr { border: none; border-top: 1px solid #eee; margin: 25px 0; }
 
 /* ===== ボタンの共通スタイル（インタラクティブ性向上） ===== */
 button {
@@ -63,74 +63,57 @@ button:disabled {
 .create-new-button { background-color: #43a047; box-shadow: 0 4px 15px rgba(67, 160, 71, 0.4); }
 .delete-button { background-color: #e53935; box-shadow: 0 4px 15px rgba(229, 57, 53, 0.4); }
 .back-button, #logout-button, .remove-choice-btn { background-color: #757575; box-shadow: 0 4px 15px rgba(117, 117, 117, 0.3); }
+.forum-button { background-color: #9c27b0; box-shadow: 0 4px 15px rgba(156, 39, 176, 0.4); }
 
 /* ===== フォーム要素のスタイル ===== */
-input[type="text"] {
+input[type="text"], textarea {
     width: calc(100% - 24px);
     padding: 12px;
     margin-bottom: 10px;
     border: 1px solid #ccc;
     border-radius: 8px;
     font-size: 1em;
+    font-family: 'Noto Sans JP', sans-serif;
     transition: all 0.3s ease;
+    resize: vertical;
 }
-input[type="text"]:focus {
+input[type="text"]:focus, textarea:focus {
     border-color: #1e88e5;
     box-shadow: 0 0 8px rgba(30, 136, 229, 0.3);
     outline: none;
 }
-#question-type-selector, #check-type-selector { text-align: center; margin-bottom: 20px; }
 
 /* ===== クイズリストのスタイル ===== */
 .quiz-list-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 20px;
-    border: 1px solid #eee;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    transition: all 0.3s ease;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 15px 20px; border: 1px solid #eee; border-radius: 8px;
+    margin-bottom: 10px; transition: all 0.3s ease;
 }
 .quiz-list-item:hover {
-    transform: translateX(5px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    transform: translateX(5px); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
     border-left: 5px solid #1e88e5;
 }
 .quiz-list-item-buttons { gap: 10px; flex-shrink: 0; }
 .quiz-list-item button { width: auto; padding: 8px 12px; font-size: 0.9em; margin-top: 0; }
 
-/* ===== プレビューリストのスタイル ===== */
-.preview-item {
-    padding: 15px;
-    border-left: 5px solid #ccc;
-}
-.preview-item small { color: #555; }
-
 /* ===== クイズプレイ画面のスタイル ===== */
 #question { font-size: 1.8em; margin: 30px 0; font-weight: bold; }
-
-.choice-button-group { display: grid; grid-template-columns: 1fr; gap: 15px; }
-.choice-checkbox-group { display: flex; flex-direction: column; gap: 10px; }
-
+.choice-button-group, .choice-checkbox-group { display: flex; flex-direction: column; gap: 10px; }
 .choice-checkbox-item {
-    background-color: #fff;
-    border: 2px solid #e0e0e0;
-    padding: 15px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
+    background-color: #fff; border: 2px solid #e0e0e0; padding: 15px;
+    border-radius: 8px; cursor: pointer; transition: all 0.3s ease;
+    display: flex; align-items: center;
 }
-.choice-checkbox-item:hover {
-    border-color: #1e88e5;
-    background-color: #e3f2fd;
-}
+.choice-checkbox-item:hover { border-color: #1e88e5; background-color: #e3f2fd; }
 .choice-checkbox-item input { transform: scale(1.5); margin-right: 15px; }
 
-.choice-checkbox-item.correct { border-color: #43a047; background-color: #e8f5e9; }
-.choice-checkbox-item.incorrect { border-color: #e53935; background-color: #ffebee; }
+/* ===== 正誤フィードバック ===== */
+.correct-answer { background-color: #43a047 !important; border-color: #388e3c !important; color: white !important; transform: scale(1.05); transition: all 0.3s ease; }
+.incorrect-answer { background-color: #e53935 !important; border-color: #d32f2f !important; color: white !important; animation: shake 0.5s; }
+@keyframes shake {
+  10%, 90% { transform: translateX(-1px); } 20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); } 40%, 60% { transform: translateX(4px); }
+}
 
 /* ===== レベル＆EXPゲージのスタイル ===== */
 #user-info { align-items: flex-start; }
@@ -142,39 +125,20 @@ input[type="text"]:focus {
 #exp-text { font-size: 0.9em; color: #757575; }
 #user-title { color: #1e88e5; font-weight: bold; }
 
-/* ===== ここから追加 ===== */
+.small-text { font-size: 0.8em; color: #757575; margin-top: 15px; text-align: center; }
 
-/* 正解時の汎用スタイル（ボタン、アイテム共通） */
-.correct-answer {
-    background-color: #43a047 !important; /* !importantで他のスタイルを上書き */
-    border-color: #388e3c !important;
-    color: white !important;
-    transform: scale(1.05); /* 少しだけ拡大してアピール */
-    transition: all 0.3s ease;
+/* ===== 掲示板関連 ===== */
+.thread-item {
+    background-color: #fff; border: 1px solid #e0e0e0; border-left: 5px solid #9c27b0;
+    padding: 15px; margin-bottom: 10px; border-radius: 8px; cursor: pointer; transition: all 0.3s ease;
 }
+.thread-item:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1); }
+.thread-item h5 { margin: 0 0 10px 0; font-size: 1.2em; }
+.thread-meta { font-size: 0.8em; color: #757575; }
 
-/* 不正解時の汎用スタイル（ボタン、アイテム共通） */
-.incorrect-answer {
-    background-color: #e53935 !important;
-    border-color: #d32f2f !important;
-    color: white !important;
-    animation: shake 0.5s; /* ブルブル震えるアニメーション */
-}
+#original-post { background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+#original-post .post-header, .reply-item .post-header { font-size: 0.9em; color: #555; margin-bottom: 5px; }
+#original-post .post-content, .reply-item .post-content { white-space: pre-wrap; /* 改行を反映 */ }
 
-/* 震えるアニメーションの定義 */
-@keyframes shake {
-  10%, 90% { transform: translateX(-1px); }
-  20%, 80% { transform: translateX(2px); }
-  30%, 50%, 70% { transform: translateX(-4px); }
-  40%, 60% { transform: translateX(4px); }
-}
-
-/* ===== ここから追加 ===== */
-
-/* 注意書き用の小さなテキスト */
-.small-text {
-    font-size: 0.8em;
-    color: #757575;
-    margin-top: 15px;
-    text-align: center;
-}
+.reply-item { border-bottom: 1px solid #eee; padding: 15px 0; }
+.reply-item:last-child { border-bottom: none; }
