@@ -1,6 +1,5 @@
 // ===== ★重要★ Firebaseの準備でコピーした`firebaseConfig`をここに貼り付け =====
-measurementId is optional
-  const firebaseConfig = {
+const firebaseConfig = {
     apiKey: "AIzaSyCXAPVZZqDDZsmrRCsAoRPkax6j3_iMlZg",
     authDomain: "qgame-57753.firebaseapp.com",
     projectId: "qgame-57753",
