@@ -168,3 +168,13 @@ input[type="text"]:focus {
   30%, 50%, 70% { transform: translateX(-4px); }
   40%, 60% { transform: translateX(4px); }
 }
+
+/* ===== ここから追加 ===== */
+
+/* 注意書き用の小さなテキスト */
+.small-text {
+    font-size: 0.8em;
+    color: #757575;
+    margin-top: 15px;
+    text-align: center;
+}
