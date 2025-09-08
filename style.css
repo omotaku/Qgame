@@ -1,314 +1,143 @@
+/* ===== Google Fontsの適用と基本設定 ===== */
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background-color: #f0f8ff;
+    font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #f0f2f5; /* 少し落ち着いた背景色 */
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
     padding: 20px 0;
     margin: 0;
+    color: #333; /* 基本の文字色 */
 }
 
+/* ===== メインコンテナをカードUI風に ===== */
 #container {
     background-color: white;
-    padding: 20px 40px;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    padding: 30px 50px;
+    border-radius: 16px; /* 角をより丸く */
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12); /* 影をリッチに */
     width: 90%;
     max-width: 700px;
+    border: 1px solid #e0e0e0;
 }
 
-.hidden {
-    display: none;
-}
+.hidden { display: none; }
 
-h1, h2, h3, h4 {
-    text-align: center;
-}
+/* ===== 見出しのスタイル ===== */
+h1, h2, h3, h4 { text-align: center; }
+h1 { font-size: 2.5em; color: #1e88e5; }
+h2 { font-size: 2em; color: #333; }
+h3 { font-size: 1.5em; border-bottom: 2px solid #1e88e5; padding-bottom: 10px; }
+h4 { color: #555; text-align: left; margin-top: 25px; border-left: 5px solid #1e88e5; padding-left: 10px;}
 
-hr {
+hr { display: none; /* hrタグは使わず、余白で区切る */ }
+
+/* ===== ボタンの共通スタイル（インタラクティブ性向上） ===== */
+button {
+    width: 100%;
+    padding: 15px 20px;
+    font-size: 1em;
+    font-weight: bold;
     border: none;
-    border-top: 1px solid #eee;
-    margin: 20px 0;
+    border-radius: 8px;
+    background-color: #1e88e5; /* メインカラー */
+    color: white;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: all 0.3s ease; /* 滑らかな変化 */
+    box-shadow: 0 4px 15px rgba(30, 136, 229, 0.4);
+}
+button:hover {
+    transform: translateY(-2px); /* 少し浮き上がる */
+    box-shadow: 0 6px 20px rgba(30, 136, 229, 0.5);
+}
+button:disabled {
+    background-color: #ccc;
+    box-shadow: none;
+    transform: none;
+    cursor: not-allowed;
 }
 
-/* ユーザー情報とログアウト */
-#user-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-#logout-button {
-    width: 120px;
-    background-color: #6c757d;
-}
+/* ===== 各ボタンの個別スタイル ===== */
+.create-new-button { background-color: #43a047; box-shadow: 0 4px 15px rgba(67, 160, 71, 0.4); }
+.delete-button { background-color: #e53935; box-shadow: 0 4px 15px rgba(229, 57, 53, 0.4); }
+.back-button, #logout-button, .remove-choice-btn { background-color: #757575; box-shadow: 0 4px 15px rgba(117, 117, 117, 0.3); }
 
-/* フォーム */
+/* ===== フォーム要素のスタイル ===== */
 input[type="text"] {
-    width: calc(100% - 22px); /* padding, borderを考慮 */
-    padding: 10px;
+    width: calc(100% - 24px);
+    padding: 12px;
     margin-bottom: 10px;
     border: 1px solid #ccc;
-    border-radius: 5px;
+    border-radius: 8px;
     font-size: 1em;
+    transition: all 0.3s ease;
 }
+input[type="text"]:focus {
+    border-color: #1e88e5;
+    box-shadow: 0 0 8px rgba(30, 136, 229, 0.3);
+    outline: none;
+}
+#question-type-selector, #check-type-selector { text-align: center; margin-bottom: 20px; }
 
-/* クイズリスト */
+/* ===== クイズリストのスタイル ===== */
 .quiz-list-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px;
+    padding: 15px 20px;
     border: 1px solid #eee;
-    border-radius: 5px;
+    border-radius: 8px;
     margin-bottom: 10px;
+    transition: all 0.3s ease;
 }
-.quiz-list-item-buttons {
-    display: flex;
-    gap: 10px;
-    flex-shrink: 0; /* ボタンが縮まないように */
+.quiz-list-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    border-left: 5px solid #1e88e5;
 }
-.quiz-list-item button {
-    width: auto;
-    padding: 10px 15px;
-    margin-top: 0;
-}
+.quiz-list-item-buttons { gap: 10px; flex-shrink: 0; }
+.quiz-list-item button { width: auto; padding: 8px 12px; font-size: 0.9em; margin-top: 0; }
 
-
-/* ボタンの共通スタイル */
-button {
-    width: 100%;
-    padding: 15px;
-    font-size: 1em;
-    border: none;
-    border-radius: 5px;
-    background-color: #007bff;
-    color: white;
-    cursor: pointer;
-    margin-top: 10px;
-    transition: background-color 0.2s;
-}
-button:hover {
-    opacity: 0.9;
-}
-button:disabled {
-    cursor: not-allowed;
-    opacity: 0.7;
-}
-
-
-/* クイズプレイ画面 */
-#question {
-    font-size: 1.5em;
-    margin-bottom: 20px;
-    text-align: center;
-}
-.choice-button-group {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-}
-.choice-button.correct {
-    background-color: #28a745;
-}
-.choice-button.incorrect {
-    background-color: #dc3545;
-}
-
-
-/* 削除ボタン */
-.delete-button {
-    background-color: #dc3545;
-}
-
-/* 新規作成ボタン */
-.create-new-button {
-    background-color: #28a745;
-    font-size: 1.2em;
-    padding: 20px;
-}
-
-/* 戻るボタン */
-.back-button {
-    background-color: #6c757d;
-}
-
-/* 問題追加フォーム */
-#add-question-form {
-    background-color: #f8f9fa;
-    padding: 15px;
-    border-radius: 5px;
-    border: 1px solid #dee2e6;
-}
-
-.choice-input-group {
-    display: flex;
-    align-items: center;
-    margin-bottom: 8px;
-}
-.choice-input-group input[type="radio"],
-.choice-input-group input[type="checkbox"] {
-    margin-right: 10px;
-}
-.choice-input-group input[type="text"] {
-    width: 100%;
-    margin-bottom: 0;
-}
-
-/* プレビュー */
+/* ===== プレビューリストのスタイル ===== */
 .preview-item {
-    background-color: #fff;
-    border: 1px solid #ddd;
-    padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 5px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    padding: 15px;
+    border-left: 5px solid #ccc;
 }
-.preview-item p {
-    margin: 0;
-    word-break: break-all; /* 長いテキストの折り返し */
-}
-.preview-item small {
-    color: #6c757d;
-    font-weight: bold;
-    margin-left: 8px;
-}
-.preview-item button {
-    width: auto;
-    padding: 5px 10px;
-    font-size: 0.8em;
-    background-color: #dc3545;
-    margin: 0;
-    flex-shrink: 0;
-}
+.preview-item small { color: #555; }
 
-/* 「選択肢を追加」ボタン */
-.add-choice-btn {
-    background-color: #17a2b8;
-    margin-bottom: 15px;
-}
+/* ===== クイズプレイ画面のスタイル ===== */
+#question { font-size: 1.8em; margin: 30px 0; font-weight: bold; }
 
-/* 各選択肢の横の「削除」ボタン */
-.remove-choice-btn {
-    width: auto;
-    background-color: #6c757d;
-    color: white;
-    padding: 5px 10px;
-    font-size: 0.8em;
-    margin-left: 10px;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
-}
-
-/* 問題タイプセレクタ */
-#question-type-selector {
-    margin-bottom: 15px;
-    text-align: center;
-}
-#question-type-selector label {
-    margin: 0 10px;
-    cursor: pointer;
-}
-
-/* テキスト入力クイズのプレイエリア */
-#text-input-quiz-area input {
-    text-align: center;
-    font-size: 1.2em;
-}
-
-/* 複数正解ルールセレクタ */
-#check-type-selector {
-    background-color: #e9ecef;
-    padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 5px;
-    text-align: center;
-    font-size: 0.9em;
-}
-#check-type-selector label {
-    margin: 0 5px;
-}
-
-/* プレイ画面の選択肢エリア */
-.choice-checkbox-group, .choice-button-group {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
+.choice-button-group { display: grid; grid-template-columns: 1fr; gap: 15px; }
+.choice-checkbox-group { display: flex; flex-direction: column; gap: 10px; }
 
 .choice-checkbox-item {
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
+    background-color: #fff;
+    border: 2px solid #e0e0e0;
     padding: 15px;
-    border-radius: 5px;
+    border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.2s;
-    display: flex; /* 中央揃えのため */
-    align-items: center; /* 中央揃えのため */
-}
-.choice-checkbox-item:hover {
-    background-color: #e2e6ea;
-}
-.choice-checkbox-item input {
-    margin-right: 10px;
-}
-.choice-checkbox-item.correct {
-    background-color: #d4edda; /* 薄い緑 */
-    border-color: #c3e6cb;
-}
-.choice-checkbox-item.incorrect {
-    background-color: #f8d7da; /* 薄い赤 */
-    border-color: #f5c6cb;
-}
-
-/* ===== ここから追加 ===== */
-
-/* ユーザー情報エリアの調整 */
-#user-info {
-    align-items: flex-start;
-}
-#user-info p {
-    margin: 0 0 5px 0;
-}
-
-/* レベル表示と経験値ゲージ */
-#level-display {
+    transition: all 0.3s ease;
     display: flex;
     align-items: center;
-    font-size: 0.9em;
 }
-#level-display span {
-    margin-right: 10px;
+.choice-checkbox-item:hover {
+    border-color: #1e88e5;
+    background-color: #e3f2fd;
 }
-#exp-bar {
-    width: 150px; /* ゲージの幅 */
-    height: 15px; /* ゲージの高さ */
-    margin-right: 10px;
-}
-#exp-text {
-    font-size: 0.8em;
-    color: #6c757d;
-}
+.choice-checkbox-item input { transform: scale(1.5); margin-right: 15px; }
 
-/* 結果画面の経験値エリア */
-#result-exp-area {
-    background-color: #e9ecef;
-    padding: 10px;
-    margin-top: 20px;
-    border-radius: 5px;
-}
-#level-up-text {
-    color: #a569bd; /* 紫色 */
-    font-weight: bold;
-    font-size: 1.2em;
-    animation: fadeIn 1.5s ease-in-out;
-}
+.choice-checkbox-item.correct { border-color: #43a047; background-color: #e8f5e9; }
+.choice-checkbox-item.incorrect { border-color: #e53935; background-color: #ffebee; }
 
-/* レベルアップ時のアニメーション */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
+/* ===== レベル＆EXPゲージのスタイル ===== */
+#user-info { align-items: flex-start; }
+#user-info p { margin: 0 0 8px 0; }
+#level-display { display: flex; align-items: center; font-size: 1em; }
+#exp-bar { width: 200px; height: 12px; margin: 0 10px; appearance: none; }
+#exp-bar::-webkit-progress-bar { background-color: #eee; border-radius: 6px; }
+#exp-bar::-webkit-progress-value { background-color: #ffca28; border-radius: 6px; transition: width 0.5s ease; }
+#exp-text { font-size: 0.9em; color: #757575; }
+#user-title { color: #1e88e5; font-weight: bold; }
