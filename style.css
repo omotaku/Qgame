@@ -141,3 +141,30 @@ input[type="text"]:focus {
 #exp-bar::-webkit-progress-value { background-color: #ffca28; border-radius: 6px; transition: width 0.5s ease; }
 #exp-text { font-size: 0.9em; color: #757575; }
 #user-title { color: #1e88e5; font-weight: bold; }
+
+/* ===== ここから追加 ===== */
+
+/* 正解時の汎用スタイル（ボタン、アイテム共通） */
+.correct-answer {
+    background-color: #43a047 !important; /* !importantで他のスタイルを上書き */
+    border-color: #388e3c !important;
+    color: white !important;
+    transform: scale(1.05); /* 少しだけ拡大してアピール */
+    transition: all 0.3s ease;
+}
+
+/* 不正解時の汎用スタイル（ボタン、アイテム共通） */
+.incorrect-answer {
+    background-color: #e53935 !important;
+    border-color: #d32f2f !important;
+    color: white !important;
+    animation: shake 0.5s; /* ブルブル震えるアニメーション */
+}
+
+/* 震えるアニメーションの定義 */
+@keyframes shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
