@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>みんなのクイズファクトリー (オンライン版)</title>
-        <link rel="preconnect" href="https://fonts.googleapis.com">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,33 +16,30 @@
     <div id="container">
         <!-- ログイン画面 -->
         <div id="login-page">
-    <h1>みんなのクイズファクトリー</h1>
-    <p>アカウントを選択して、クイズを作成・プレイしよう！</p>
-    <button id="login-button">Googleでログイン</button>
-    <!-- ★★★ ここから追加 ★★★ -->
-    <button id="anonymous-login-button" class="back-button">ゲストとして始める</button>
-    <p class="small-text">※ゲストプレイでは、レベルや称号は保存されません。</p>
-    <!-- ★★★ ここまで追加 ★★★ -->
-</div>
+            <h1>みんなのクイズファクトリー</h1>
+            <p>アカウントを選択して、クイズを作成・プレイしよう！</p>
+            <button id="login-button">Googleでログイン</button>
+            <button id="anonymous-login-button" class="back-button">ゲストとして始める</button>
+            <p class="small-text">※ゲストプレイでは、レベルや称号、掲示板への投稿は保存されません。</p>
+        </div>
 
         <!-- メイン画面 (ログイン後に表示) -->
         <div id="main-page" class="hidden">
             <div id="user-info">
-    <div>
-        <p><span id="user-title"></span> <span id="user-name"></span>さん、ようこそ！</p>
-        <div id="level-display">
-            <span>Lv. <span id="user-level">1</span></span>
-            <progress id="exp-bar" value="0" max="100"></progress>
-            <span id="exp-text">0 / 100</span>
-        </div>
-    </div>
-    <button id="logout-button">ログアウト</button>
-</div>
+                <div>
+                    <p><span id="user-title"></span> <span id="user-name"></span>さん、ようこそ！</p>
+                    <div id="level-display">
+                        <span>Lv. <span id="user-level">1</span></span>
+                        <progress id="exp-bar" value="0" max="100"></progress>
+                        <span id="exp-text">0 / 100</span>
+                    </div>
+                </div>
+                <button id="logout-button">ログアウト</button>
+            </div>
             <hr>
-            <!-- 新規作成ボタン -->
             <button id="show-create-page-button" class="create-new-button">＋ 新しいクイズを作る</button>
+            <button id="show-forum-button" class="forum-button">掲示板を見る</button>
             <hr>
-            <!-- 公開クイズ一覧 -->
             <div id="quiz-list-section">
                 <h3>みんなが作ったクイズ</h3>
                 <div id="quiz-list">
@@ -52,24 +51,16 @@
         <!-- クイズ作成専用ページ -->
         <div id="create-page" class="hidden">
             <h3>新しいクイズを作成する</h3>
-            
             <input type="text" id="quiz-title" placeholder="クイズ全体のタイトル (例: IT基本クイズ)">
             <hr>
-            
             <div id="add-question-form">
                 <h4>新しい問題を追加</h4>
-
-                <!-- 問題タイプを選択 -->
                 <div id="question-type-selector">
                     <label><input type="radio" name="question-type" value="multiple-choice" checked> 選択肢形式</label>
                     <label><input type="radio" name="question-type" value="text-input"> テキスト入力形式</label>
                 </div>
-
                 <input type="text" id="new-question-text" placeholder="問題文">
-                
-                <!-- 選択肢形式のフォームエリア -->
                 <div id="multiple-choice-area">
-                    <!-- 複数正解のルールを選択 -->
                     <div id="check-type-selector">
                         <label><input type="radio" name="check-type" value="single" checked> 正解は1つ</label>
                         <label><input type="radio" name="check-type" value="all"> すべて選択で正解</label>
@@ -78,22 +69,15 @@
                     <div id="choices-editor-area"></div> 
                     <button id="add-choice-button" class="add-choice-btn">＋ 選択肢を追加</button>
                 </div>
-
-                <!-- テキスト入力形式のフォームエリア -->
                 <div id="text-input-answer-area" class="hidden">
-                    <input type="text" id="text-answer-input" placeholder="正解をカンマ(,)区切りで複数の答え (例:1,2=>正解は1or2)">
+                    <input type="text" id="text-answer-input" placeholder="正解をカンマ(,)区切りで入力 (例: くも,クモ)">
                 </div>
-
                 <button id="add-question-button">↓ この問題を追加する</button>
             </div>
             <hr>
-            
             <h4>作成中のクイズ</h4>
-            <div id="quiz-preview-list">
-                <p>まだ問題がありません。</p>
-            </div>
+            <div id="quiz-preview-list"><p>まだ問題がありません。</p></div>
             <hr>
-
             <button id="save-quiz-button" class="create-new-button">この内容でクイズを投稿</button>
             <button id="back-to-main-from-create-button" class="back-button">保存しないで一覧に戻る</button>
         </div>
@@ -102,36 +86,55 @@
         <div id="quiz-page" class="hidden">
             <h2 id="quiz-play-title"></h2>
             <p id="question"></p>
-
-            <!-- 選択肢ボタン or チェックボックスが表示されるエリア -->
             <div id="choices-display-area"></div>
-
-            <!-- テキスト入力問題用のエリア -->
             <div id="text-input-quiz-area" class="hidden">
                 <input type="text" id="user-answer-text" placeholder="答えを入力してください">
             </div>
-
-            <!-- 解答ボタン（選択肢・テキスト共通） -->
             <button id="submit-answer-button" class="hidden">解答する</button>
-
             <button id="back-to-main-button" class="back-button">一覧に戻る</button>
         </div>
 
         <!-- 結果画面 -->
-     <div id="result-page" class="hidden">
-<h2>結果発表！</h2>
-<p id="score-text"></p>
-code
-Code
-<!-- 経験値＆レベルアップ表示エリア -->
-<div id="result-exp-area">
-    <p>獲得EXP: <span id="earned-exp-text"></span></p>
-    <p id="level-up-text" class="hidden"></p>
-</div>
+        <div id="result-page" class="hidden">
+            <h2>結果発表！</h2>
+            <p id="score-text"></p>
+            <div id="result-exp-area">
+                <p>獲得EXP: <span id="earned-exp-text"></span></p>
+                <p id="level-up-text" class="hidden"></p>
+            </div>
+            <button id="play-again-button">同じクイズをもう一度</button>
+            <button id="back-to-main-from-result-button" class="back-button">一覧に戻る</button>
+        </div>
 
-<button id="play-again-button">同じクイズをもう一度</button>
-<button id="back-to-main-from-result-button" class="back-button">一覧に戻る</button>
-</div>
+        <!-- 掲示板スレッド一覧ページ -->
+        <div id="forum-page" class="hidden">
+            <h3>掲示板</h3>
+            <div id="create-thread-area">
+                <h4>新しいスレッドを立てる</h4>
+                <input type="text" id="thread-title-input" placeholder="スレッドのタイトル">
+                <textarea id="thread-content-input" rows="4" placeholder="最初の投稿内容"></textarea>
+                <button id="post-thread-button">投稿する</button>
+            </div>
+            <hr>
+            <div id="thread-list"></div>
+            <button id="back-to-main-from-forum-button" class="back-button">メインに戻る</button>
+        </div>
+
+        <!-- スレッド詳細＆返信ページ -->
+        <div id="thread-view-page" class="hidden">
+            <div id="original-post"></div>
+            <hr>
+            <h4>返信一覧</h4>
+            <div id="replies-list"></div>
+            <hr>
+            <div id="reply-form-area">
+                <h4>返信する</h4>
+                <textarea id="reply-content-input" rows="4" placeholder="内容を入力"></textarea>
+                <button id="post-reply-button">返信する</button>
+            </div>
+            <button id="back-to-forum-button" class="back-button">スレッド一覧に戻る</button>
+        </div>
+    </div>
 
     <!-- Firebase SDK の読み込み -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
