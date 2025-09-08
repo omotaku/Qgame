@@ -8,7 +8,6 @@
     appId: "1:414616796879:web:639eef8b493d5cce5901ba",
     measurementId: "G-3VLJRH61N9"
   };
-
 // =======================================================================
 
 
@@ -26,7 +25,6 @@ const TITLES = {
     30: "クイズマスター", 50: "歩くデータベース", 75: "クイズの賢者", 100: "クイズ神"
 };
 
-// レベルアップに必要な経験値テーブル (次のレベルになるために必要な累計EXP)
 const EXP_TABLE = [0, 100, 250, 450, 700, 1000, 1350, 1750, 2200, 2700, 3250]; // Lv1～10まで
 
 
@@ -59,7 +57,7 @@ document.querySelectorAll('input[name="check-type"]').forEach(radio => {
 
 // ゲーム状態を管理する変数
 let currentUser = null;
-let currentUserData = {}; // ユーザーのレベルやEXPを格納
+let currentUserData = {};
 let currentQuizzesData = null;
 let currentQuizIndex = 0;
 let score = 0;
@@ -98,10 +96,8 @@ async function loadOrCreateUserData(user) {
     const doc = await userRef.get();
     if (!doc.exists) {
         const initialUserData = {
-            displayName: user.displayName,
-            email: user.email,
-            level: 1,
-            exp: 0,
+            displayName: user.displayName, email: user.email,
+            level: 1, exp: 0,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         };
         await userRef.set(initialUserData);
@@ -120,10 +116,8 @@ async function saveQuiz() {
 
     try {
         await quizzesCollection.add({
-            title: title,
-            quizzes: newQuizQuestions,
-            authorName: currentUser.displayName,
-            authorId: currentUser.uid,
+            title: title, quizzes: newQuizQuestions,
+            authorName: currentUser.displayName, authorId: currentUser.uid,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         alert('クイズを投稿しました！');
@@ -143,7 +137,7 @@ async function loadQuizzes() {
 
     snapshot.forEach(doc => {
         const quiz = doc.data();
-        quiz.id = doc.id; // クイズデータにドキュメントIDを追加
+        quiz.id = doc.id;
         const item = document.createElement('div');
         item.className = 'quiz-list-item';
 
@@ -241,22 +235,25 @@ function showQuiz() {
 }
 
 function checkAnswer(event) {
-    const selectedAnswer = event.target.textContent;
+    const selectedButton = event.target;
+    const selectedAnswer = selectedButton.textContent;
     const correctAnswers = Array.isArray(currentQuizzesData.quizzes[currentQuizIndex].answer) 
         ? currentQuizzesData.quizzes[currentQuizIndex].answer 
         : [currentQuizzesData.quizzes[currentQuizIndex].answer];
     const choiceButtons = document.querySelectorAll('.choice-button');
     choiceButtons.forEach(b => b.disabled = true);
 
-    let isCorrect = false;
     if (correctAnswers.includes(selectedAnswer)) {
         score++;
-        isCorrect = true;
-        event.target.classList.add('correct');
+        selectedButton.classList.add('correct-answer');
     } else {
-        event.target.classList.add('incorrect');
+        selectedButton.classList.add('incorrect-answer');
+        choiceButtons.forEach(btn => {
+            if(correctAnswers.includes(btn.textContent)) {
+                btn.classList.add('correct-answer');
+            }
+        });
     }
-    showAnswerFeedback(isCorrect);
     goToNextQuestion();
 }
 
@@ -264,8 +261,8 @@ function submitAndCheckAnswer() {
     const quiz = currentQuizzesData.quizzes[currentQuizIndex];
     const correctAnswers = quiz.answer;
     let isCorrect = false;
-
-    document.getElementById('submit-answer-button').disabled = true;
+    const submitBtn = document.getElementById('submit-answer-button');
+    submitBtn.disabled = true;
     
     if (quiz.type === 'text-input') {
         const userAnswer = document.getElementById('user-answer-text').value.trim().toLowerCase();
@@ -274,7 +271,6 @@ function submitAndCheckAnswer() {
     } else {
         const userCheckboxes = document.querySelectorAll('input[name="user-answer-checkbox"]:checked');
         const userAnswers = Array.from(userCheckboxes).map(cb => cb.value);
-        
         if (quiz.checkType === 'all') {
             isCorrect = userAnswers.length === correctAnswers.length && userAnswers.every(ans => correctAnswers.includes(ans));
         } else {
@@ -282,6 +278,11 @@ function submitAndCheckAnswer() {
         }
     }
     
+    if(isCorrect) {
+        submitBtn.classList.add('correct-answer');
+    } else {
+        submitBtn.classList.add('incorrect-answer');
+    }
     showAnswerFeedback(isCorrect);
     goToNextQuestion();
 }
@@ -290,22 +291,27 @@ function showAnswerFeedback(isCorrect) {
     const quiz = currentQuizzesData.quizzes[currentQuizIndex];
     if (isCorrect) {
         score++;
-    } else if (quiz.type !== 'multiple-choice' || quiz.checkType !== 'single') {
+    } else {
         alert(`不正解！ 正解は「${quiz.answer.join(', ')}」でした。`);
-    } else if (quiz.checkType === 'single') {
-        alert(`不正解！ 正解は「${quiz.answer[0]}」でした。`);
     }
 
     if(quiz.type === 'multiple-choice' && quiz.checkType !== 'single') {
         document.querySelectorAll('.choice-checkbox-item').forEach(item => {
             const checkbox = item.querySelector('input');
             if (quiz.answer.includes(checkbox.value)) {
-                item.classList.add('correct');
+                item.classList.add('correct-answer');
             } else if (checkbox.checked) {
-                item.classList.add('incorrect');
+                item.classList.add('incorrect-answer');
             }
             checkbox.disabled = true;
         });
+    } else if (quiz.type === 'text-input') {
+        const inputField = document.getElementById('user-answer-text');
+        if (isCorrect) {
+            inputField.classList.add('correct-answer');
+        } else {
+            inputField.classList.add('incorrect-answer');
+        }
     }
 }
 
@@ -453,10 +459,14 @@ function toggleChoiceInputType() {
 
 function goToNextQuestion() {
     setTimeout(() => {
-        document.getElementById('submit-answer-button').disabled = false;
+        const submitBtn = document.getElementById('submit-answer-button');
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('correct-answer', 'incorrect-answer');
+        
         const userAnswerText = document.getElementById('user-answer-text');
         userAnswerText.disabled = false;
         userAnswerText.value = '';
+        userAnswerText.classList.remove('correct-answer', 'incorrect-answer');
 
         currentQuizIndex++;
         if (currentQuizIndex < currentQuizzesData.quizzes.length) {
