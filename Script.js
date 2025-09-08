@@ -53,6 +53,7 @@ document.getElementById('submit-answer-button').addEventListener('click', submit
 document.querySelectorAll('input[name="check-type"]').forEach(radio => {
     radio.addEventListener('change', toggleChoiceInputType);
 });
+document.getElementById('anonymous-login-button').addEventListener('click', signInAnonymously);
 
 
 // ゲーム状態を管理する変数
@@ -69,7 +70,15 @@ function signInWithGoogle() {
     const provider = new firebase.auth.GoogleAuthProvider();
     auth.signInWithPopup(provider).catch(error => console.error(error));
 }
+// (signInWithGoogle と signOut の間にでも追加してください)
 
+// ★★★ この関数を新しく追加 ★★★
+function signInAnonymously() {
+    auth.signInAnonymously().catch(error => {
+        console.error("Anonymous sign-in failed:", error);
+        alert("ゲストとしてのログインに失敗しました。時間をおいて再度お試しください。");
+    });
+}
 function signOut() {
     auth.signOut();
 }
@@ -77,9 +86,25 @@ function signOut() {
 auth.onAuthStateChanged(async user => {
     if (user) {
         currentUser = user;
-        await loadOrCreateUserData(user);
-        updatePlayerUI();
-        showMainPage();
+
+        // ★★★ ここから変更 ★★★
+        if (user.isAnonymous) {
+            // 匿名ユーザーの場合
+            currentUserData = {
+                displayName: "ゲスト",
+                level: 1,
+                exp: 0
+            };
+            updatePlayerUI(); // ゲスト用のUIを表示
+            showMainPage();
+        } else {
+            // Googleログインユーザーの場合
+            await loadOrCreateUserData(user); // 従来通りデータを読み込む
+            updatePlayerUI();
+            showMainPage();
+        }
+        // ★★★ ここまで変更 ★★★
+
     } else {
         currentUser = null;
         currentUserData = {};
@@ -478,24 +503,42 @@ function goToNextQuestion() {
 function updatePlayerUI() {
     if (!currentUserData || typeof currentUserData.level === 'undefined') return;
 
-    const level = currentUserData.level;
-    const currentExp = currentUserData.exp;
-    const nextLevelExp = getNextLevelExp(level);
-    const prevLevelExp = getNextLevelExp(level - 1);
-    
-    const expForThisLevel = currentExp - prevLevelExp;
-    const expNeededForNextLevel = nextLevelExp - prevLevelExp;
+    // ★★★ ここから変更 ★★★
+    if (currentUser.isAnonymous) {
+        // 匿名ユーザーの場合の表示
+        document.getElementById('user-name').textContent = "ゲスト";
+        document.getElementById('user-title').textContent = ""; // 称号は非表示
+        document.getElementById('level-display').classList.add('hidden'); // レベルとEXPを非表示
+    } else {
+        // Googleログインユーザーの場合の表示
+        document.getElementById('level-display').classList.remove('hidden'); // レベルとEXPを表示
 
-    document.getElementById('user-name').textContent = currentUser.displayName;
-    document.getElementById('user-level').textContent = level;
-    document.getElementById('exp-bar').value = expForThisLevel;
-    document.getElementById('exp-bar').max = expNeededForNextLevel;
-    document.getElementById('exp-text').textContent = `${expForThisLevel} / ${expNeededForNextLevel}`;
-    
-    document.getElementById('user-title').textContent = getTitle(level);
+        const level = currentUserData.level;
+        const currentExp = currentUserData.exp;
+        const nextLevelExp = getNextLevelExp(level);
+        const prevLevelExp = getNextLevelExp(level - 1);
+        
+        const expForThisLevel = currentExp - prevLevelExp;
+        const expNeededForNextLevel = nextLevelExp - prevLevelExp;
+
+        document.getElementById('user-name').textContent = currentUser.displayName;
+        document.getElementById('user-level').textContent = level;
+        document.getElementById('exp-bar').value = expForThisLevel;
+        document.getElementById('exp-bar').max = expNeededForNextLevel;
+        document.getElementById('exp-text').textContent = `${expForThisLevel} / ${expNeededForNextLevel}`;
+        
+        document.getElementById('user-title').textContent = getTitle(level);
+    }
+    // ★★★ ここまで変更 ★★★
 }
-
 async function calculateAndUpdateExp() {
+    if (currentUser.isAnonymous) {
+        document.getElementById('result-exp-area').classList.add('hidden');
+        return; // 匿名ユーザーの場合はここで処理を終了
+    }
+    document.getElementById('result-exp-area').classList.remove('hidden');
+    
+    // ...以降の経験値計算ロジックは変更なし...
     const totalQuestions = currentQuizzesData.quizzes.length;
     const baseExp = 10;
     const correctBonus = score * 5;
@@ -552,4 +595,4 @@ function getTitle(level) {
         }
     }
     return currentTitle;
-}
+}       
