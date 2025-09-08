@@ -1,4 +1,5 @@
 // ===== ★重要★ Firebaseの準備でコピーした`firebaseConfig`をここに貼り付け =====
+measurementId is optional
   const firebaseConfig = {
     apiKey: "AIzaSyCXAPVZZqDDZsmrRCsAoRPkax6j3_iMlZg",
     authDomain: "qgame-57753.firebaseapp.com",
@@ -17,7 +18,7 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 const quizzesCollection = db.collection('quizzes');
 const usersCollection = db.collection('users');
-const threadsCollection = db.collection('threads'); // ★新設★
+const threadsCollection = db.collection('threads');
 
 
 // ===== ゲーム内設定 =====
@@ -54,7 +55,6 @@ document.getElementById('add-choice-button').addEventListener('click', () => add
 document.querySelectorAll('input[name="question-type"]').forEach(radio => radio.addEventListener('change', toggleQuestionTypeForm));
 document.getElementById('submit-answer-button').addEventListener('click', submitAndCheckAnswer);
 document.querySelectorAll('input[name="check-type"]').forEach(radio => radio.addEventListener('change', toggleChoiceInputType));
-// ★掲示板用イベントリスナー★
 document.getElementById('show-forum-button').addEventListener('click', showForumPage);
 document.getElementById('back-to-main-from-forum-button').addEventListener('click', showMainPage);
 document.getElementById('post-thread-button').addEventListener('click', postNewThread);
@@ -69,7 +69,7 @@ let currentQuizzesData = null;
 let currentQuizIndex = 0;
 let score = 0;
 let newQuizQuestions = [];
-let currentThreadId = null; // ★新設★ 表示中のスレッドID
+let currentThreadId = null;
 
 
 // ===== 認証処理 =====
@@ -99,7 +99,6 @@ auth.onAuthStateChanged(async user => {
     } else {
         currentUser = null;
         currentUserData = {};
-        // 全ページを非表示にしてログイン画面へ
         const allPages = [mainPage, quizPage, resultPage, createPage, forumPage, threadViewPage];
         allPages.forEach(page => page.classList.add('hidden'));
         loginPage.classList.remove('hidden');
@@ -122,10 +121,6 @@ async function loadOrCreateUserData(user) {
     }
 }
 
-// ... (Firestoreのクイズ処理、ゲームロジックは前回のコードとほぼ同じ) ...
-// (一部関数名を明確にするため微修正)
-// ===== ここからは前回のコードと大きく異なる部分 =====
-
 
 // ===== ページ表示/UIヘルパー関数 =====
 function hideAllPages() {
@@ -139,33 +134,31 @@ function showMainPage() {
     loadQuizzes();
 }
 
+// ... 他のshow...Page関数 ... (省略)
 function showCreatePage() {
     hideAllPages();
     createPage.classList.remove('hidden');
-    // ... (フォーム初期化処理は変更なし) ...
+    document.getElementById('quiz-title').value = '';
+    newQuizQuestions = [];
+    document.querySelector('input[name="question-type"][value="multiple-choice"]').checked = true;
+    document.querySelector('input[name="check-type"][value="single"]').checked = true;
+    toggleQuestionTypeForm();
+    toggleChoiceInputType();
+    renderPreviewList();
 }
-
 function showForumPage() {
     hideAllPages();
     forumPage.classList.remove('hidden');
-    
-    // 匿名ユーザーはスレッド作成フォームを非表示にする
     const createThreadArea = document.getElementById('create-thread-area');
     createThreadArea.style.display = currentUser.isAnonymous ? 'none' : 'block';
-    
     loadThreads();
 }
-
 async function showThreadViewPage(threadId) {
     hideAllPages();
     threadViewPage.classList.remove('hidden');
     currentThreadId = threadId;
-
-    // 匿名ユーザーは返信フォームを非表示にする
     const replyFormArea = document.getElementById('reply-form-area');
     replyFormArea.style.display = currentUser.isAnonymous ? 'none' : 'block';
-
-    // スレッドの元の投稿を表示
     const threadRef = threadsCollection.doc(threadId);
     const doc = await threadRef.get();
     if (doc.exists) {
@@ -173,59 +166,36 @@ async function showThreadViewPage(threadId) {
         const opDiv = document.getElementById('original-post');
         opDiv.innerHTML = `
             <h3>${thread.title}</h3>
-            <div class="post-header">
-                <strong>${thread.authorName}</strong>
-                <small> - ${new Date(thread.createdAt.seconds * 1000).toLocaleString()}</small>
-            </div>
-            <div class="post-content">${thread.content}</div>
-        `;
+            <div class="post-header"><strong>${thread.authorName}</strong><small> - ${new Date(thread.createdAt.seconds * 1000).toLocaleString()}</small></div>
+            <div class="post-content">${thread.content}</div>`;
     }
-
-    // 返信一覧を読み込み
     loadReplies(threadId);
 }
 
-
 // ===== 掲示板データ処理 =====
+// ... (掲示板の関数は変更なし) ...
 async function postNewThread() {
     const title = document.getElementById('thread-title-input').value.trim();
     const content = document.getElementById('thread-content-input').value.trim();
-
-    if (!title || !content) {
-        alert('タイトルと内容を入力してください。');
-        return;
-    }
-
+    if (!title || !content) { alert('タイトルと内容を入力してください。'); return; }
     try {
         await threadsCollection.add({
-            title: title,
-            content: content,
-            authorId: currentUser.uid,
-            authorName: currentUserData.displayName,
+            title, content, authorId: currentUser.uid, authorName: currentUserData.displayName,
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            lastReplyAt: firebase.firestore.FieldValue.serverTimestamp(), // 更新順ソート用
+            lastReplyAt: firebase.firestore.FieldValue.serverTimestamp(),
             replyCount: 0
         });
         document.getElementById('thread-title-input').value = '';
         document.getElementById('thread-content-input').value = '';
         loadThreads();
-    } catch (error) {
-        console.error("Error adding thread: ", error);
-        alert('スレッドの投稿に失敗しました。');
-    }
+    } catch (error) { console.error("Error adding thread: ", error); alert('スレッドの投稿に失敗しました。'); }
 }
-
 async function loadThreads() {
     const threadListDiv = document.getElementById('thread-list');
     threadListDiv.innerHTML = '<p>スレッドを読み込んでいます...</p>';
     const snapshot = await threadsCollection.orderBy('lastReplyAt', 'desc').get();
     threadListDiv.innerHTML = '';
-
-    if (snapshot.empty) {
-        threadListDiv.innerHTML = '<p>まだスレッドがありません。</p>';
-        return;
-    }
-
+    if (snapshot.empty) { threadListDiv.innerHTML = '<p>まだスレッドがありません。</p>'; return; }
     snapshot.forEach(doc => {
         const thread = doc.data();
         const item = document.createElement('div');
@@ -233,84 +203,102 @@ async function loadThreads() {
         item.onclick = () => showThreadViewPage(doc.id);
         item.innerHTML = `
             <h5>${thread.title}</h5>
-            <div class="thread-meta">
-                作成者: ${thread.authorName} | 返信: ${thread.replyCount} | 最終更新: ${new Date(thread.lastReplyAt.seconds * 1000).toLocaleString()}
-            </div>
-        `;
+            <div class="thread-meta">作成者: ${thread.authorName} | 返信: ${thread.replyCount} | 最終更新: ${new Date(thread.lastReplyAt.seconds * 1000).toLocaleString()}</div>`;
         threadListDiv.appendChild(item);
     });
 }
-
 async function postReply() {
     const content = document.getElementById('reply-content-input').value.trim();
-    if (!content) {
-        alert('返信内容を入力してください。');
-        return;
-    }
-
+    if (!content) { alert('返信内容を入力してください。'); return; }
     const threadRef = threadsCollection.doc(currentThreadId);
     const repliesRef = threadRef.collection('replies');
-
     try {
-        // 返信をサブコレクションに追加
         await repliesRef.add({
-            content: content,
-            authorId: currentUser.uid,
-            authorName: currentUserData.displayName,
+            content, authorId: currentUser.uid, authorName: currentUserData.displayName,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-
-        // スレッド本体の更新日時と返信数を更新
         await threadRef.update({
             lastReplyAt: firebase.firestore.FieldValue.serverTimestamp(),
             replyCount: firebase.firestore.FieldValue.increment(1)
         });
-
         document.getElementById('reply-content-input').value = '';
-        loadReplies(currentThreadId); // 返信リストを再読み込み
-    } catch (error) {
-        console.error("Error adding reply: ", error);
-        alert('返信の投稿に失敗しました。');
-    }
+        loadReplies(currentThreadId);
+    } catch (error) { console.error("Error adding reply: ", error); alert('返信の投稿に失敗しました。'); }
 }
-
 async function loadReplies(threadId) {
     const repliesListDiv = document.getElementById('replies-list');
     repliesListDiv.innerHTML = '';
     const repliesRef = threadsCollection.doc(threadId).collection('replies');
     const snapshot = await repliesRef.orderBy('createdAt', 'asc').get();
-
-    if (snapshot.empty) {
-        repliesListDiv.innerHTML = '<p>まだ返信はありません。</p>';
-        return;
-    }
-
+    if (snapshot.empty) { repliesListDiv.innerHTML = '<p>まだ返信はありません。</p>'; return; }
     snapshot.forEach(doc => {
         const reply = doc.data();
         const item = document.createElement('div');
         item.className = 'reply-item';
         item.innerHTML = `
-            <div class="post-header">
-                <strong>${reply.authorName}</strong>
-                <small> - ${new Date(reply.createdAt.seconds * 1000).toLocaleString()}</small>
-            </div>
-            <div class="post-content">${reply.content}</div>
-        `;
+            <div class="post-header"><strong>${reply.authorName}</strong><small> - ${new Date(reply.createdAt.seconds * 1000).toLocaleString()}</small></div>
+            <div class="post-content">${reply.content}</div>`;
         repliesListDiv.appendChild(item);
     });
 }
 
+// ===== Firestore (クイズ) / ゲームロジック =====
 
-// (ここから下は、前回の完成版JSからコピー＆ペーストでOKです。変更はありません)
-// (saveQuiz, loadQuizzes, deleteQuiz, startGame, showQuiz, checkAnswer, submitAndCheckAnswer, showAnswerFeedback, showResult, clearQuestionForm, renderPreviewList, addQuestionToList, addChoiceInput, toggleQuestionTypeForm, toggleChoiceInputType, goToNextQuestion, updatePlayerUI, calculateAndUpdateExp, getNextLevelExp, getTitle)
-// (ただし、showMainPage と showCreatePage は上記の新しいものに置き換えてください)
+// ★★★ ここがデバッグ対象の関数です ★★★
+async function loadQuizzes() {
+    console.log("1. loadQuizzes 関数が開始されました");
+    const quizListDiv = document.getElementById('quiz-list');
+    quizListDiv.innerHTML = '<p>クイズを読み込んでいます...</p>';
 
-// ... (以下、省略していたコードの全文) ...
+    try {
+        console.log("2. Firestoreからクイズデータの取得を開始します...");
+        const snapshot = await quizzesCollection.orderBy('createdAt', 'desc').get();
+        console.log("3. データの取得に成功しました。ドキュメント数:", snapshot.size);
+
+        quizListDiv.innerHTML = '';
+
+        if (snapshot.empty) {
+            console.log("4. クイズデータは空でした。処理を終了します。");
+            quizListDiv.innerHTML = '<p>まだクイズが投稿されていません。</p>';
+            return;
+        }
+
+        console.log("5. クイズリストのHTML生成を開始します...");
+        snapshot.forEach((doc, index) => {
+            console.log(`  - ${index + 1}番目のドキュメントを処理中...`);
+            const quiz = doc.data();
+            quiz.id = doc.id;
+            const item = document.createElement('div');
+            item.className = 'quiz-list-item';
+
+            let buttonsHTML = `<button class="play-button">このクイズで遊ぶ</button>`;
+            if (currentUser && currentUser.uid === quiz.authorId) {
+                buttonsHTML += `<button class="delete-button" data-id="${doc.id}">削除</button>`;
+            }
+            item.innerHTML = `
+                <div><strong>${quiz.title}</strong><small> (作成者: ${quiz.authorName})</small></div>
+                <div class="quiz-list-item-buttons">${buttonsHTML}</div>`;
+
+            item.querySelector('.play-button').addEventListener('click', () => startGame(quiz));
+            const deleteBtn = item.querySelector('.delete-button');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', () => deleteQuiz(doc.id, quiz.title));
+            }
+            quizListDiv.appendChild(item);
+        });
+        console.log("6. クイズリストのHTML生成が完了しました。");
+
+    } catch (error) {
+        console.error("★★★ loadQuizzesでエラーが発生しました！ ★★★", error);
+        quizListDiv.innerHTML = '<p style="color: red;">クイズの読み込みに失敗しました。管理者にご連絡ください。</p>';
+    }
+}
+
+// ... (startGame 以降の全関数を記載) ...
 async function saveQuiz() {
     const title = document.getElementById('quiz-title').value;
     if (!title.trim()) { alert('クイズ全体のタイトルを入力してください。'); return; }
     if (newQuizQuestions.length === 0) { alert('問題が1つもありません。最低1問は追加してください。'); return; }
-
     try {
         await quizzesCollection.add({
             title: title, quizzes: newQuizQuestions,
@@ -319,12 +307,16 @@ async function saveQuiz() {
         });
         alert('クイズを投稿しました！');
         showMainPage();
-    } catch (error) {
-        alert('クイズの投稿に失敗しました。');
-        console.error(error);
-    }
+    } catch (error) { alert('クイズの投稿に失敗しました。'); console.error(error); }
 }
-
+async function deleteQuiz(docId, quizTitle) {
+    if (!confirm(`「${quizTitle}」を本当に削除しますか？この操作は元に戻せません。`)) { return; }
+    try {
+        await db.collection('quizzes').doc(docId).delete();
+        alert('クイズを削除しました。');
+        loadQuizzes();
+    } catch (error) { alert('クイズの削除に失敗しました。'); console.error("Error removing document: ", error); }
+}
 function startGame(data) {
     currentQuizzesData = data;
     currentQuizIndex = 0;
@@ -334,20 +326,16 @@ function startGame(data) {
     document.getElementById('quiz-play-title').textContent = currentQuizzesData.title;
     showQuiz();
 }
-
 function showQuiz() {
     const quiz = currentQuizzesData.quizzes[currentQuizIndex];
     document.getElementById('question').textContent = quiz.question;
-
     const choicesArea = document.getElementById('choices-display-area');
     const textInputArea = document.getElementById('text-input-quiz-area');
     const submitBtn = document.getElementById('submit-answer-button');
     choicesArea.innerHTML = '';
-
     choicesArea.classList.add('hidden');
     textInputArea.classList.add('hidden');
     submitBtn.classList.add('hidden');
-
     if (quiz.type === 'text-input') {
         textInputArea.classList.remove('hidden');
         submitBtn.classList.remove('hidden');
@@ -357,7 +345,6 @@ function showQuiz() {
     } else if (quiz.type === 'multiple-choice') {
         choicesArea.classList.remove('hidden');
         const checkType = quiz.checkType || 'single';
-
         if (checkType === 'single') {
             const buttonGroup = document.createElement('div');
             buttonGroup.className = 'choice-button-group';
@@ -384,16 +371,12 @@ function showQuiz() {
     }
     submitBtn.disabled = false;
 }
-
 function checkAnswer(event) {
     const selectedButton = event.target;
     const selectedAnswer = selectedButton.textContent;
-    const correctAnswers = Array.isArray(currentQuizzesData.quizzes[currentQuizIndex].answer) 
-        ? currentQuizzesData.quizzes[currentQuizIndex].answer 
-        : [currentQuizzesData.quizzes[currentQuizIndex].answer];
+    const correctAnswers = Array.isArray(currentQuizzesData.quizzes[currentQuizIndex].answer) ? currentQuizzesData.quizzes[currentQuizIndex].answer : [currentQuizzesData.quizzes[currentQuizIndex].answer];
     const choiceButtons = document.querySelectorAll('.choice-button');
     choiceButtons.forEach(b => b.disabled = true);
-
     if (correctAnswers.includes(selectedAnswer)) {
         score++;
         selectedButton.classList.add('correct-answer');
@@ -402,14 +385,12 @@ function checkAnswer(event) {
     }
     goToNextQuestion();
 }
-
 function submitAndCheckAnswer() {
     const quiz = currentQuizzesData.quizzes[currentQuizIndex];
     const correctAnswers = quiz.answer;
     let isCorrect = false;
     const submitBtn = document.getElementById('submit-answer-button');
     submitBtn.disabled = true;
-    
     if (quiz.type === 'text-input') {
         const userAnswer = document.getElementById('user-answer-text').value.trim().toLowerCase();
         document.getElementById('user-answer-text').disabled = true;
@@ -423,45 +404,30 @@ function submitAndCheckAnswer() {
             isCorrect = userAnswers.some(ans => correctAnswers.includes(ans));
         }
     }
-    
-    if(isCorrect) {
-        submitBtn.classList.add('correct-answer');
-    } else {
-        submitBtn.classList.add('incorrect-answer');
-    }
+    if(isCorrect) { submitBtn.classList.add('correct-answer'); } else { submitBtn.classList.add('incorrect-answer'); }
     showAnswerFeedback(isCorrect);
     goToNextQuestion();
 }
-
 function showAnswerFeedback(isCorrect) {
     const quiz = currentQuizzesData.quizzes[currentQuizIndex];
-    if (isCorrect) {
-        score++;
-    }
-
+    if (isCorrect) { score++; }
     if(quiz.type === 'multiple-choice' && quiz.checkType !== 'single') {
         document.querySelectorAll('.choice-checkbox-item').forEach(item => {
             const checkbox = item.querySelector('input');
-            if (checkbox.checked && !correctAnswers.includes(checkbox.value)) {
-                item.classList.add('incorrect-answer');
-            }
+            if (checkbox.checked && !correctAnswers.includes(checkbox.value)) { item.classList.add('incorrect-answer'); }
             checkbox.disabled = true;
         });
     } else if (quiz.type === 'text-input') {
         const inputField = document.getElementById('user-answer-text');
-        if (!isCorrect) {
-            inputField.classList.add('incorrect-answer');
-        }
+        if (!isCorrect) { inputField.classList.add('incorrect-answer'); }
     }
 }
-
 function showResult() {
     hideAllPages();
     resultPage.classList.remove('hidden');
     document.getElementById('score-text').textContent = `あなたは ${currentQuizzesData.quizzes.length}問中 ${score}問 正解しました！`;
     calculateAndUpdateExp();
 }
-
 function clearQuestionForm() {
     document.getElementById('new-question-text').value = '';
     document.getElementById('text-answer-input').value = '';
@@ -469,7 +435,6 @@ function clearQuestionForm() {
     choicesEditor.innerHTML = '';
     addChoiceInput(); addChoiceInput();
 }
-
 function renderPreviewList() {
     const previewListDiv = document.getElementById('quiz-preview-list');
     previewListDiv.innerHTML = newQuizQuestions.length === 0 ? '<p>まだ問題がありません。</p>' : '';
@@ -491,12 +456,10 @@ function renderPreviewList() {
         previewListDiv.appendChild(item);
     });
 }
-
 function addQuestionToList() {
     const questionText = document.getElementById('new-question-text').value.trim();
     const questionType = document.querySelector('input[name="question-type"]:checked').value;
     let newQuestion = {};
-
     if (questionType === 'multiple-choice') {
         const checkType = document.querySelector('input[name="check-type"]:checked').value;
         const choiceNodes = document.querySelectorAll('#choices-editor-area .choice-text');
@@ -517,30 +480,24 @@ function addQuestionToList() {
     renderPreviewList();
     clearQuestionForm();
 }
-
 function addChoiceInput(text = '') {
     const choicesEditor = document.getElementById('choices-editor-area');
     const choiceCount = choicesEditor.getElementsByClassName('choice-input-group').length;
     const checkType = document.querySelector('input[name="check-type"]:checked').value;
-
     const newChoiceGroup = document.createElement('div');
     newChoiceGroup.className = 'choice-input-group';
-    
     const input = document.createElement('input');
     input.type = (checkType === 'single') ? 'radio' : 'checkbox';
     input.name = 'correct-answer';
     input.value = choiceCount;
     if (choiceCount === 0 && checkType === 'single') { input.checked = true; }
-
     const textInput = document.createElement('input');
     textInput.type = 'text';
     textInput.className = 'choice-text';
     textInput.placeholder = `選択肢${choiceCount + 1}`;
     textInput.value = text;
-
     newChoiceGroup.appendChild(input);
     newChoiceGroup.appendChild(textInput);
-    
     if (choiceCount >= 2) {
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
@@ -557,13 +514,11 @@ function addChoiceInput(text = '') {
     }
     choicesEditor.appendChild(newChoiceGroup);
 }
-
 function toggleQuestionTypeForm() {
     const questionType = document.querySelector('input[name="question-type"]:checked').value;
     document.getElementById('multiple-choice-area').classList.toggle('hidden', questionType !== 'multiple-choice');
     document.getElementById('text-input-answer-area').classList.toggle('hidden', questionType !== 'text-input');
 }
-
 function toggleChoiceInputType() {
     const choicesEditor = document.getElementById('choices-editor-area');
     const currentTexts = Array.from(choicesEditor.querySelectorAll('.choice-text')).map(input => input.value);
@@ -574,18 +529,15 @@ function toggleChoiceInputType() {
         addChoiceInput(); addChoiceInput();
     }
 }
-
 function goToNextQuestion() {
     setTimeout(() => {
         const submitBtn = document.getElementById('submit-answer-button');
         submitBtn.disabled = false;
         submitBtn.classList.remove('correct-answer', 'incorrect-answer');
-        
         const userAnswerText = document.getElementById('user-answer-text');
         userAnswerText.disabled = false;
         userAnswerText.value = '';
         userAnswerText.classList.remove('correct-answer', 'incorrect-answer');
-
         currentQuizIndex++;
         if (currentQuizIndex < currentQuizzesData.quizzes.length) {
             showQuiz();
@@ -594,10 +546,8 @@ function goToNextQuestion() {
         }
     }, 2500);
 }
-
 function updatePlayerUI() {
     if (!currentUserData || typeof currentUserData.level === 'undefined') return;
-
     if (currentUser.isAnonymous) {
         document.getElementById('user-name').textContent = "ゲスト";
         document.getElementById('user-title').textContent = "";
@@ -610,7 +560,6 @@ function updatePlayerUI() {
         const prevLevelExp = getNextLevelExp(level - 1);
         const expForThisLevel = currentExp - prevLevelExp;
         const expNeededForNextLevel = nextLevelExp - prevLevelExp;
-
         document.getElementById('user-name').textContent = currentUser.displayName;
         document.getElementById('user-level').textContent = level;
         document.getElementById('exp-bar').value = expForThisLevel;
@@ -619,32 +568,20 @@ function updatePlayerUI() {
         document.getElementById('user-title').textContent = getTitle(level);
     }
 }
-
 async function calculateAndUpdateExp() {
-    if (currentUser.isAnonymous) {
-        document.getElementById('result-exp-area').classList.add('hidden');
-        return;
-    }
+    if (currentUser.isAnonymous) { document.getElementById('result-exp-area').classList.add('hidden'); return; }
     document.getElementById('result-exp-area').classList.remove('hidden');
-    
     const totalQuestions = currentQuizzesData.quizzes.length;
     const baseExp = 10;
     const correctBonus = score * 5;
     const perfectBonus = (score === totalQuestions) ? 20 : 0;
     const totalEarnedExp = baseExp + correctBonus + perfectBonus;
-
     document.getElementById('earned-exp-text').textContent = `+${totalEarnedExp} EXP`;
     document.getElementById('level-up-text').classList.add('hidden');
-
     currentUserData.exp += totalEarnedExp;
-
     let leveledUp = false;
     let newLevel = currentUserData.level;
-    while (currentUserData.exp >= getNextLevelExp(newLevel)) {
-        newLevel++;
-        leveledUp = true;
-    }
-
+    while (currentUserData.exp >= getNextLevelExp(newLevel)) { newLevel++; leveledUp = true; }
     if (leveledUp) {
         const oldLevel = currentUserData.level;
         currentUserData.level = newLevel;
@@ -652,14 +589,12 @@ async function calculateAndUpdateExp() {
         levelUpText.textContent = `レベルアップ！ Lv.${oldLevel} → Lv.${newLevel}`;
         levelUpText.classList.remove('hidden');
     }
-
     await usersCollection.doc(currentUser.uid).update({
         level: currentUserData.level,
         exp: currentUserData.exp
     });
     updatePlayerUI();
 }
-
 function getNextLevelExp(level) {
     if (level <= 0) return 0;
     if (level < EXP_TABLE.length) { return EXP_TABLE[level]; }
@@ -668,7 +603,6 @@ function getNextLevelExp(level) {
     const extraLevels = level - lastTableLevel;
     return baseExp + extraLevels * (250 + lastTableLevel * 50);
 }
-
 function getTitle(level) {
     let currentTitle = "駆け出し";
     const sortedLevels = Object.keys(TITLES).map(Number).sort((a, b) => a - b);
@@ -680,4 +614,4 @@ function getTitle(level) {
         }
     }
     return currentTitle;
-};
+}
