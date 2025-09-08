@@ -248,11 +248,7 @@ function checkAnswer(event) {
         selectedButton.classList.add('correct-answer');
     } else {
         selectedButton.classList.add('incorrect-answer');
-        choiceButtons.forEach(btn => {
-            if(correctAnswers.includes(btn.textContent)) {
-                btn.classList.add('correct-answer');
-            }
-        });
+        // ★変更点：正解をハイライトする処理を削除
     }
     goToNextQuestion();
 }
@@ -292,15 +288,15 @@ function showAnswerFeedback(isCorrect) {
     if (isCorrect) {
         score++;
     } else {
-        alert(`不正解！ 正解は「${quiz.answer.join(', ')}」でした。`);
+        // ★変更点：答えを表示するアラートを削除
+        // ここで「不正解！」というシンプルなフィードバックを出すことも可能
     }
 
     if(quiz.type === 'multiple-choice' && quiz.checkType !== 'single') {
         document.querySelectorAll('.choice-checkbox-item').forEach(item => {
             const checkbox = item.querySelector('input');
-            if (quiz.answer.includes(checkbox.value)) {
-                item.classList.add('correct-answer');
-            } else if (checkbox.checked) {
+            // ★変更点：正解をハイライトする処理を削除
+            if (checkbox.checked && !isCorrect) { // 自分がチェックしたものが不正解だった場合のみ
                 item.classList.add('incorrect-answer');
             }
             checkbox.disabled = true;
